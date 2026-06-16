@@ -1,0 +1,21 @@
+{
+  "name": "project-management-app",
+  "version": "1.0.0",
+  "description": "a project management backend api",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "javascript",
+    "node",
+    "express",
+    "mongoose",
+    "mongodb"
+  ],
+  "author": "Kaushik",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "3.8.4"
+  }
+}

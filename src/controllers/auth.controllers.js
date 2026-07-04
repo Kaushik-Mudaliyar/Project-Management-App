@@ -4,6 +4,11 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { emailVerificationMailgenContent, sendEmail } from "../utils/mail.js";
 
+const options = {
+  httpOnly: true,
+  secure: true,
+};
+
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await userModel.findById(userId);
@@ -72,4 +77,43 @@ const registerUser = asyncHandler(async (req, res) => {
     );
 });
 
-export { registerUser };
+const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await userModel.findOne({ email });
+  if (!user) {
+    throw new ApiError(400, "User does not exist with this email");
+  }
+  const isPasswordValid = await user.isPasswordCorrect(password);
+  if (!isPasswordValid) {
+    throw new ApiError(400, "Invalid credentials");
+  }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    user._id,
+  );
+
+  const loggedInUser = await userModel
+    .findById(user._id)
+    .select(
+      "-password -refreshToken -emailVerificationToken -emailVerificationExpiry",
+    );
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: loggedInUser,
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        },
+        "User logged in successfully",
+      ),
+    );
+});
+
+export { registerUser, loginUser };
